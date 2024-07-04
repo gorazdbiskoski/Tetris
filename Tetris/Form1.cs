@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -25,6 +26,8 @@ namespace Tetris
         int spawnX;
         int spawnY;
         Color background;
+        int score;
+        Shape nextShape;
 
         public Form1()
         {
@@ -38,8 +41,9 @@ namespace Tetris
             this.KeyDown += Form1_KeyDown;
             background = Color.LightGray;
             loadCanvas();
+            nextShape = getNextShape();
         }
-       
+
 
         private void loadCanvas()
         {
@@ -67,7 +71,7 @@ namespace Tetris
             if (newX < 0 || newX + currentShape.Width > canvasWidth || newY + currentShape.Height > canvasHeight)
             {
                 return false;
-            }         
+            }
             for (int i = 0; i < currentShape.Width; i++)
             {
                 for (int j = 0; j < currentShape.Height; j++)
@@ -94,13 +98,14 @@ namespace Tetris
                 for (int j = 0; j < currentShape.Height; j++)
                 {
                     if (currentShape.Dots[j, i] == 1)
-                    {                        
-                       workingGraphics.FillRectangle(new SolidBrush(currentShape.Color), (spawnX + i) * dotSize, (spawnY + j) * dotSize, dotSize, dotSize);
+                    {
+                        workingGraphics.FillRectangle(new SolidBrush(currentShape.Color), (spawnX + i) * dotSize, (spawnY + j) * dotSize, dotSize, dotSize);
                     }
                 }
             }
             pictureBox1.Image = workingBitmap;
         }
+
 
         private void updateCanvas()
         {
@@ -134,6 +139,10 @@ namespace Tetris
                 canvasBitmap = new Bitmap(workingBitmap);
                 updateCanvas();
                 currentShape = getRandomShape();
+                currentShape = nextShape;
+                nextShape = getNextShape();
+                UpdateScore();
+
             }
         }
 
@@ -168,7 +177,88 @@ namespace Tetris
             if (!isMoveSuccess && e.KeyCode == Keys.Up)
             {
                 currentShape.rollback();
-            }  
-        }    
+            }
+        }
+
+        public void UpdateScore()
+        {
+
+            for (int i = 0; i < canvasHeight; i++)
+            {
+                int j;
+                for (j = canvasWidth - 1; j >= 0; j--)
+                {
+                    if (canvasDots[j, i] == 0)
+                        break;
+                }
+
+                if (j == -1)
+                {
+                    score++;
+                    lbl1.Text = "Score: " + score;
+                    lbl2.Text = "Level: " + score / 10;
+
+                    timer.Interval -= 10;
+
+                    for (j = 0; j < canvasWidth; j++)
+                    {
+                        for (int k = i; k > 0; k--)
+                        {
+                            canvasDots[j, k] = canvasDots[j, k - 1];
+                        }
+
+                        canvasDots[j, 0] = 0;
+                    }
+                }
+            }
+
+
+            for (int i = 0; i < canvasWidth; i++)
+            {
+                for (int j = 0; j < canvasHeight; j++)
+                {
+                    canvasGraphics = Graphics.FromImage(canvasBitmap);
+                    if (canvasDots[i, j] == 0)
+                    {
+                        canvasGraphics.FillRectangle(Brushes.LightGray, i * dotSize, j * dotSize, dotSize, dotSize);
+                    }
+                }
+            }
+
+            pictureBox1.Image = canvasBitmap;
+        }
+        Bitmap nextShapeBitmap;
+        Graphics nextShapeGraphics;
+
+        private Shape getNextShape()
+        {
+            var shape = getRandomShape();
+            nextShapeBitmap = new Bitmap(6 * dotSize, 6 * dotSize);
+            nextShapeGraphics = Graphics.FromImage(nextShapeBitmap);
+
+            nextShapeGraphics.FillRectangle(Brushes.LightGray, 0, 0, nextShapeBitmap.Width, nextShapeBitmap.Height);
+
+            var startX = (6 - shape.Width) / 2;
+            var startY = (6 - shape.Height) / 2;
+
+            for (int i = 0; i < shape.Height; i++)
+            {
+                for (int j = 0; j < shape.Width; j++)
+                {
+                    nextShapeGraphics.FillRectangle(
+                        shape.Dots[i, j] == 1 ? Brushes.Black : Brushes.LightGray,
+                        (startX + j) * dotSize, (startY + i) * dotSize, dotSize, dotSize);
+                }
+            }
+
+            pictureBox2.Size = nextShapeBitmap.Size;
+            pictureBox2.Image = nextShapeBitmap;
+
+            return shape;
+        }
+        private void Form1_Load(object sender, EventArgs e)
+        {
+
+        }
     }
 }
