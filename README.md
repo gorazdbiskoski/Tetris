@@ -90,5 +90,6 @@
 - Следната идна фигура се генерира со методот
 - Последниот повик е кон функцијата UpdateScore кој соодветно го ажурира резултатот.
 
-  ![image](https://github.com/gorazdbiskoski/Tetris/assets/126030318/94b3998a-ecd4-4d45-9933-d0fcb388bbc6)
+![image](https://github.com/gorazdbiskoski/Tetris/assets/126030318/c1a7f13c-acc0-4985-bbf2-acfccc74e6d7)
+
 
